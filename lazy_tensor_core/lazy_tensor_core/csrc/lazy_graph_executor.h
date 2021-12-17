@@ -71,7 +71,8 @@ class LazyGraphExecutor {
 
   // Retrieves the PyTorch CPU tensors behind the lazy tensors IR operations.
   // All the tensors must be on the same device.
-  std::vector<at::Tensor> GetTensors(std::vector<LazyTensor>* tensors);
+  std::vector<at::Tensor> GetTensors(std::vector<LazyTensor>* tensors,
+                                     bool use_current_thread);
 
   size_t IncTrimCounter();
 
@@ -178,7 +179,7 @@ class LazyGraphExecutor {
                              c10::ArrayRef<size_t> indices);
   std::shared_ptr<Async> TryRunCachedSync(std::vector<LazyTensor>* tensors,
                                           SyncTensorCollection* coll,
-                                          PostOrderData* po_data);
+                                          PostOrderData* po_data, bool use_current_thread);
 
   CompilationResult Compile(const std::vector<LazyTensor>& tensors,
                             c10::ArrayRef<std::string> devices,
@@ -196,7 +197,7 @@ class LazyGraphExecutor {
 
   std::shared_ptr<Async> SyncTensorsGraphInternal(
       std::vector<LazyTensor>* tensors, c10::ArrayRef<std::string> devices,
-      const SyncTensorsConfig& config);
+      const SyncTensorsConfig& config, bool use_current_thread);
 
   // Schedules the execution of a sync tensors operation in background. The
   // asynchronous operation will hold the device locks by capturing the ones
@@ -205,14 +206,17 @@ class LazyGraphExecutor {
       SyncTensorCollection* coll,
       std::vector<torch::lazy::BackendDataPtr> parameters_data,
       std::vector<torch::lazy::BackendDataPtr> tensors_data,
-      ComputationCache::TypePtr cached_computation);
+      ComputationCache::TypePtr cached_computation,
+      bool use_current_thread);
 
   std::shared_ptr<Async> ScheduleSyncTensorsGraph(
       std::vector<LazyTensor>* tensors, SyncTensorCollection* coll,
       std::vector<torch::lazy::BackendDataPtr> parameters_data,
-      ComputationCache::TypePtr cached_computation);
+      ComputationCache::TypePtr cached_computation,
+      bool use_current_thread);
 
-  std::vector<at::Tensor> GetTensorsFused(std::vector<LazyTensor>* tensors);
+  std::vector<at::Tensor> GetTensorsFused(std::vector<LazyTensor>* tensors,
+                                          bool use_current_thread);
 
   std::vector<at::Tensor> FetchTensors(
       std::vector<LazyTensor>* tensors,
